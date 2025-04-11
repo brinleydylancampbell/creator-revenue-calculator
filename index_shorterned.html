@@ -1,0 +1,278 @@
+<div style="max-width:500px; margin:0 auto; font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.1); overflow:hidden;" id="creator-revenue-calculator" class="calculator-wrapper"></div>
+
+<script>
+(function() {
+  // Initial state with default values and default currency (USD)
+  const state = {
+    followers: 10000,
+    emailConversionRate: 2,
+    customerConversionRate: 5,
+    offerPrice: 29.99,
+    currency: 'USD'
+  };
+
+  // Mapping currency codes to appropriate locales
+  const currencyLocales = {
+    USD: 'en-US',
+    CAD: 'en-CA',
+    AUD: 'en-AU',
+    GBP: 'en-GB'
+  };
+
+  // Mapping to force desired currency symbols
+  const symbolMapping = {
+    USD: 'US$',
+    CAD: 'CAD$',
+    AUD: 'AU$',
+    GBP: '£'
+  };
+
+  // Custom function to format currency using the desired symbol
+  function formatCurrency(value) {
+    const locale = currencyLocales[state.currency] || 'en-US';
+    const numberFormat = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return symbolMapping[state.currency] + numberFormat.format(value);
+  }
+
+  function formatNumber(value) {
+    return new Intl.NumberFormat('en-US').format(Math.round(value));
+  }
+
+  function calculateLaunchRevenue() {
+    const emailSubscribers = state.followers * (state.emailConversionRate / 100);
+    const customers = emailSubscribers * (state.customerConversionRate / 100);
+    return customers * state.offerPrice;
+  }
+
+  window.addEventListener('load', function() {
+    const calculatorEl = document.getElementById('creator-revenue-calculator');
+    if (!calculatorEl) return;
+
+    // Insert CSS for header and sliders (using your accent colour #a695bb)
+    const style = document.createElement('style');
+    style.textContent = `
+      .calculator-header {
+        background: #a695bb;
+        color: #000;
+        padding: 1.5rem;
+        text-align: center;
+      }
+      .calculator-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+      }
+      .calculator-description {
+        opacity: 0.9;
+        margin-top: 0.5rem;
+      }
+      .calculator-content { padding: 1.5rem; }
+      .calculator-footer {
+        background-color: #f9fafb;
+        padding: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+      }
+      .calculator-input-group { margin-bottom: 1.5rem; }
+      .calculator-label-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+      }
+      .calculator-label { font-weight: 500; font-size: 0.875rem; }
+      .calculator-value { font-size: 0.875rem; font-weight: 500; }
+      .calculator-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+      }
+      .calculator-slider {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+      /* Style the slider thumb with the accent colour */
+      .calculator-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: #a695bb;
+        cursor: pointer;
+        margin-top: -6px;
+      }
+      .calculator-slider::-moz-range-thumb {
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: #a695bb;
+        cursor: pointer;
+      }
+      .result-value {
+        font-size: 1.875rem;
+        font-weight: bold;
+        color: #10b981;
+        margin-top: 0.25rem;
+      }
+      .result-breakdown {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+      .result-row { display: flex; justify-content: space-between; padding: 0.25rem 0; }
+      .result-number { font-weight: 500; }
+      .section-title {
+        font-weight: 600;
+        font-size: 1.125rem;
+        margin-bottom: 1rem;
+      }
+      .currency-selector {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
+        width: 100%;
+        font-size: 0.875rem;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Render the calculator HTML (only the Launch Campaign section is included)
+    calculatorEl.innerHTML = `
+      <div class="calculator-header">
+        <h2 class="calculator-title">Creator Revenue Calculator</h2>
+        <div class="calculator-description">Estimate your potential revenue streams</div>
+        <div style="margin: 1rem auto 0; max-width: 200px;">
+          <label for="currency-selector" style="font-size:0.875rem;">Currency:</label>
+          <select id="currency-selector" class="currency-selector">
+            <option value="AUD">Australian Dollar (AU$)</option>
+            <option value="CAD">Canadian Dollar (CAD$)</option>
+            <option value="USD" selected>US Dollar (US$)</option>
+            <option value="GBP">British Pound (GBP)</option>
+          </select>
+        </div>
+      </div>
+      <div class="calculator-content">
+        <div class="section-title">Launch Campaign</div>
+        <div class="calculator-input-group">
+          <div class="calculator-label-row">
+            <label class="calculator-label">Followers</label>
+            <span class="calculator-value" id="followers-value">${formatNumber(state.followers)}</span>
+          </div>
+          <input type="range" min="1000" max="1000000" step="1000" value="${state.followers}" class="calculator-slider" id="followers-slider">
+          <input type="number" min="100" max="10000000" value="${state.followers}" class="calculator-input" id="followers-input">
+        </div>
+        <div class="calculator-input-group">
+          <div class="calculator-label-row">
+            <label class="calculator-label">Followers to Emails Conversion Rate (%)</label>
+            <span class="calculator-value" id="email-rate-value">${state.emailConversionRate}%</span>
+          </div>
+          <input type="range" min="0.1" max="20" step="0.1" value="${state.emailConversionRate}" class="calculator-slider" id="email-rate-slider">
+        </div>
+        <div class="calculator-input-group">
+          <div class="calculator-label-row">
+            <label class="calculator-label">Email Optins to Paid Customers on Launch (%)</label>
+            <span class="calculator-value" id="customer-rate-value">${state.customerConversionRate}%</span>
+          </div>
+          <input type="range" min="0.1" max="10" step="0.1" value="${state.customerConversionRate}" class="calculator-slider" id="customer-rate-slider">
+        </div>
+        <div class="calculator-input-group">
+          <div class="calculator-label-row">
+            <label class="calculator-label">Offer Price</label>
+            <span class="calculator-value" id="offer-price-value">${formatCurrency(state.offerPrice)}</span>
+          </div>
+          <input type="range" min="0.99" max="10000" step="10" value="${state.offerPrice}" class="calculator-slider" id="offer-price-slider">
+          <input type="number" min="0.99" step="0.01" value="${state.offerPrice}" class="calculator-input" id="offer-price-input">
+        </div>
+      </div>
+      <div class="calculator-footer">
+        <h3 class="calculator-label">Estimated Launch Revenue</h3>
+        <div class="result-value" id="launch-revenue">${formatCurrency(calculateLaunchRevenue())}</div>
+        <div class="result-breakdown">
+          <div class="result-row">
+            <span>Email Subscribers:</span>
+            <span class="result-number" id="email-subscribers">${formatNumber(state.followers * (state.emailConversionRate / 100))}</span>
+          </div>
+          <div class="result-row">
+            <span>Customers:</span>
+            <span class="result-number" id="launch-customers">${formatNumber(state.followers * (state.emailConversionRate / 100) * (state.customerConversionRate / 100))}</span>
+          </div>
+          <div class="result-row">
+            <span>Revenue per Email Subscriber:</span>
+            <span class="result-number" id="revenue-per-subscriber">${formatCurrency(calculateLaunchRevenue() / (state.followers * (state.emailConversionRate / 100) || 1))}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Attach event listeners for the Launch Campaign inputs and currency selector
+    setupEventListeners();
+    document.getElementById('currency-selector').addEventListener('change', e => {
+      state.currency = e.target.value;
+      updateLaunchResults();
+    });
+
+    function setupEventListeners() {
+      setupInputListener('followers-slider', 'followers-input', 'followers-value', 'followers', parseInt, formatNumber, updateLaunchResults);
+      setupRangeListener('email-rate-slider', 'email-rate-value', 'emailConversionRate', v => `${v}%`, updateLaunchResults);
+      setupRangeListener('customer-rate-slider', 'customer-rate-value', 'customerConversionRate', v => `${v}%`, updateLaunchResults);
+      setupInputListener('offer-price-slider', 'offer-price-input', 'offer-price-value', 'offerPrice', parseFloat, formatCurrency, updateLaunchResults);
+    }
+
+    function setupInputListener(sliderId, inputId, valueId, stateKey, parser, formatter, updateCallback) {
+      const slider = document.getElementById(sliderId);
+      const input = document.getElementById(inputId);
+      const valueEl = document.getElementById(valueId);
+      if (slider && input && valueEl) {
+        slider.addEventListener('input', e => {
+          const value = parser(e.target.value);
+          state[stateKey] = value;
+          input.value = value;
+          valueEl.textContent = formatter(value);
+          updateCallback();
+        });
+        input.addEventListener('input', e => {
+          let value = parser(e.target.value) || 0;
+          state[stateKey] = value;
+          slider.value = value;
+          valueEl.textContent = formatter(value);
+          updateCallback();
+        });
+      }
+    }
+
+    function setupRangeListener(sliderId, valueId, stateKey, formatter, updateCallback) {
+      const slider = document.getElementById(sliderId);
+      const valueEl = document.getElementById(valueId);
+      if (slider && valueEl) {
+        slider.addEventListener('input', e => {
+          const value = parseFloat(e.target.value);
+          state[stateKey] = value;
+          valueEl.textContent = formatter(value);
+          updateCallback();
+        });
+      }
+    }
+
+    function updateLaunchResults() {
+      const launchRevenue = calculateLaunchRevenue();
+      const emailSubscribers = state.followers * (state.emailConversionRate / 100);
+      const customers = emailSubscribers * (state.customerConversionRate / 100);
+      updateElementText('launch-revenue', formatCurrency(launchRevenue));
+      updateElementText('email-subscribers', formatNumber(emailSubscribers));
+      updateElementText('launch-customers', formatNumber(customers));
+      updateElementText('revenue-per-subscriber', formatCurrency(launchRevenue / (emailSubscribers || 1)));
+    }
+
+    function updateElementText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+  });
+})();
+</script>
